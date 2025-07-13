@@ -72,7 +72,7 @@ jobs:
           fi
 
       - name: Upload Validation Artifacts
-        uses: actions/gitea-upload-artifact@v4
+        uses: https://gitea.com/actions/gitea-upload-artifact@v4
         if: always()
         with:
           name: validation-reports
