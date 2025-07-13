@@ -88,9 +88,9 @@ jobs:
         run: |
           if [ -f validation-report.json ]; then
             # Parse the validation status from JSON report
-            SCHEMA_STATUS=$(cat validation-report.json | grep -o '"cdmSchema":{"status":"[^"]*"' | cut -d'"' -f6)
-            BUSINESS_STATUS=$(cat validation-report.json | grep -o '"businessRules":{"status":"[^"]*"' | cut -d'"' -f6)
-            METADATA_STATUS=$(cat validation-report.json | grep -o '"metadata":{"status":"[^"]*"' | cut -d'"' -f6)
+            SCHEMA_STATUS=$(jq -r '.validationResults.cdmSchema.status' validation-report.json)
+            BUSINESS_STATUS=$(jq -r '.validationResults.businessRules.status' validation-report.json)
+            METADATA_STATUS=$(jq -r '.validationResults.metadata.status' validation-report.json)
 
             echo "Validation Status Summary:"
             echo "- CDM Schema: $SCHEMA_STATUS"
