@@ -3,8 +3,8 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'data/**/*.json'
-      - 'metadata/**/*.json'
+      - "data/**/*.json"
+      - "metadata/**/*.json"
 
 jobs:
   validate-cdm:
@@ -12,65 +12,65 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          
+          node-version: "18"
+
       - name: Copy validation scripts
         run: |
           # Copy validation scripts from repository to workspace
-          cp -r gitea-workflows/scripts ./validation-scripts
+          cp -r .gitea/scripts ./validation-scripts
           cd validation-scripts
-          
+
       - name: Install validation dependencies
         run: |
           cd validation-scripts
           npm install
-          
+
       - name: Run CDM Schema Validation
         id: schema-validation
         run: |
           cd validation-scripts
           echo "🔍 Running CDM schema validation..."
           npm run validate:schema 2>&1 | tee ../cdm-validation.log
-          
+
       - name: Run Business Rules Validation
         id: business-validation
         run: |
           cd validation-scripts
           echo "🔍 Running business rules validation..."
           npm run validate:business 2>&1 | tee ../business-rules-validation.log
-          
+
       - name: Run Metadata Validation
         id: metadata-validation
         run: |
           cd validation-scripts
           echo "🔍 Running metadata validation..."
           npm run validate:metadata 2>&1 | tee ../metadata-validation.log
-          
+
       - name: Generate Validation Report
         run: |
           cd validation-scripts
           echo "📊 Generating comprehensive validation report..."
           npm run report
-          
+
           # Copy reports to workspace root
           cp validation-report.md ../
           cp validation-report.json ../
-          
+
       - name: Display Validation Summary
         run: |
           echo "## CDM Validation Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ -f validation-report.md ]; then
             cat validation-report.md >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Validation report generation failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
       - name: Upload Validation Artifacts
         uses: actions/upload-artifact@v4
         if: always()
@@ -83,7 +83,7 @@ jobs:
             business-rules-validation.log
             metadata-validation.log
           retention-days: 30
-          
+
       - name: Set Pull Request Status
         run: |
           if [ -f validation-report.json ]; then
@@ -91,12 +91,12 @@ jobs:
             SCHEMA_STATUS=$(cat validation-report.json | grep -o '"cdmSchema":{"status":"[^"]*"' | cut -d'"' -f6)
             BUSINESS_STATUS=$(cat validation-report.json | grep -o '"businessRules":{"status":"[^"]*"' | cut -d'"' -f6)
             METADATA_STATUS=$(cat validation-report.json | grep -o '"metadata":{"status":"[^"]*"' | cut -d'"' -f6)
-            
+
             echo "Validation Status Summary:"
             echo "- CDM Schema: $SCHEMA_STATUS"
-            echo "- Business Rules: $BUSINESS_STATUS"  
+            echo "- Business Rules: $BUSINESS_STATUS"
             echo "- Metadata: $METADATA_STATUS"
-            
+
             if [ "$SCHEMA_STATUS" = "passed" ] && [ "$BUSINESS_STATUS" = "passed" ] && [ "$METADATA_STATUS" = "passed" ]; then
               echo "✅ All validations passed - PR ready for review and merge"
               exit 0
